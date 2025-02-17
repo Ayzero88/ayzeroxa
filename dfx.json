@@ -1,0 +1,35 @@
+{
+  "canisters": {
+    "ayzeroxa": {
+      "main": "src/ayzeroxa/main.mo",
+      "type": "motoko"
+    },
+    "ayzeroxa_assets": {
+      "dependencies": [
+        "ayzeroxa"
+      ],
+      "frontend": {
+        "entrypoint": "src/ayzeroxa_assets/src/index.html"
+      },
+      "source": [
+        "src/ayzeroxa_assets/assets",
+        "dist/ayzeroxa_assets/"
+      ],
+      "type": "assets"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "dfx": "0.9.3",
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:8000",
+      "type": "ephemeral"
+    }
+  },
+  "version": 1
+}

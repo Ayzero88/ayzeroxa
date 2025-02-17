@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "es2018",        
+    "lib": ["ES2018", "DOM"],  
+    "allowJs": true,           
+    "jsx": "react",            
+    "module": "ESNext",        
+    "moduleResolution": "Node",
+    "outDir": "./dist",        
+    "rootDir": "./src",        
+    "strict": true,            
+    "skipLibCheck": true,      
+    "forceConsistentCasingInFileNames": true 
+  },
+  "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/declarations"
+  ]
+}
