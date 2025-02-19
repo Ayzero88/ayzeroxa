@@ -4,9 +4,11 @@ import Home from './pages/Home';
 const App = () => {
 
     const [sections, setSections] = useState({
+      
         register: false,
         authenticate: false,
         banner: true,
+        AXPanel: false,
      });
     
 

@@ -1,14 +1,12 @@
 import React from 'react';
 import Banner from './Banner';
-import Register from './Register';
-import Attendance from './Attendance';
+import AXpanel from './AXpanel';
 
 const Home = ({sections, setSections}) => {
   return (
          <div>
              {sections.banner && <Banner setSections={setSections} />}
-             {sections.register && <Register setSections={setSections} />}
-             {sections.authenticate && <Attendance setSections={setSections} />}
+             {sections.register && <AXpanel setSections={setSections} />}
          </div>
   )
 }

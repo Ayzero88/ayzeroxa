@@ -10,11 +10,8 @@ const Banner = ({setSections}) => {
             <AppName/>
         
             <div className='home-btn'>
-                <button className='reg' onClick={()=> setSections({register: true})}>
-                    Register 
-                </button>
-                <button className='auth' onClick={()=> setSections({authenticate: true})}>
-                    Authenticate
+                <button className='reg' onClick={()=> setSections({Axpanel: true})}>
+                     AXPanel
                 </button>
             </div>
 
