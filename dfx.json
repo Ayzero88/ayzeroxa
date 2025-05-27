@@ -5,33 +5,13 @@
       "type": "motoko"
     },
     "ayzeroxa_frontend": {
-      "dependencies": [
-        "ayzeroxa_backend"
-      ],
-      "source": [
-        "src/ayzeroxa_frontend/dist"
-      ],
+      "dependencies": ["ayzeroxa_backend"],
       "type": "assets",
-      "workspace": "ayzeroxa_frontend"
-    },
-    "internet_identity": {
-      "candid": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity.did",
-      "frontend": {},
-      "remote": {
-        "id": {
-          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
-        }
-      },
-      "type": "custom",
-      "wasm": "https://github.com/dfinity/internet-identity/releases/latest/download/internet_identity_dev.wasm.gz"
+      "workspace": "src/ayzeroxa_frontend",
+      "source": ["src/ayzeroxa_frontend/dist"]
     }
   },
-  "defaults": {
-    "build": {
-      "args": "",
-      "packtool": ""
-    }
-  },
+  "defaults": { "build": { "args": "", "packtool": "" } },
   "output_env_file": ".env",
   "version": 1
 }

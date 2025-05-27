@@ -7,8 +7,12 @@
 .DS_Store
 **/.DS_Store
 
+# Windows temporary files
+Thumbs.db
+
 # dfx temporary files
 .dfx/
+canister_ids.json # Important for local vs. deployed canister IDs
 
 # generated files
 **/declarations/
@@ -18,8 +22,23 @@ target/
 
 # frontend code
 node_modules/
+build/           # Common React build output
 dist/
-.svelte-kit/
+.svelte-kit/     # SvelteKit specific
+.parcel-cache/   # If you use Parcel
 
 # environment variables
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Motoko specific (if using Mops)
+.mops/
