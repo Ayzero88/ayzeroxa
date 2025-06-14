@@ -44,11 +44,11 @@ const MultipleSelector = ({ setSelectedItems, selectedItems, itemsArray }) => {
                         <div key={type.value} className="dropdown-item">
                             <input
                                 type="checkbox"
-                                value={type.value}
-                                checked={selectedItems.includes(type.value)}
+                                value={type?.value ?? ""}
+                                checked={selectedItems.includes(type?.value)}
                                 onChange={handleCheckboxChange}
                             />
-                            <p>{type.label}</p>
+                            <p>{type?.label}</p>
                         </div>
                     ))}
                 </div>

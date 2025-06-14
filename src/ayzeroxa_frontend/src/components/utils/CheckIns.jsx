@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
-import { FiActivity, FiArrowDownRight, FiCalendar, FiExternalLink, FiHome, FiInfo, FiMapPin, FiSearch, FiTrash, FiTrash2, FiUser, FiUsers } from 'react-icons/fi';
+import { FiActivity, FiArrowDownRight, FiArrowLeft, FiCalendar, FiExternalLink, FiHome, FiInfo, FiMapPin, FiSearch, FiTrash, FiTrash2, FiUser, FiUsers } from 'react-icons/fi';
 import SelectInput from './SelectInput';
-import { FaExternalLinkSquareAlt, FaHome, FaTimes, FaWindowClose } from 'react-icons/fa';
+import { FaExternalLinkSquareAlt, FaHome, FaTimes, FaUserAlt, FaWindowClose } from 'react-icons/fa';
 import Inputs from './Inputs';
 import { getDataFromDB } from '../data/IndexedDB';
 import FormatDateString from './FormatDateString';
@@ -14,7 +14,9 @@ import { countMatchingPairs, countValueOccurrences} from './UtilFunc';
 import Alert from './Alert';
 import { ayzeroxa_backend } from '../../../../declarations/ayzeroxa_backend';
 import MissedDaysReport from './MissedDaysReport';
-import BlobToArray from '../crpt/BlobToArray';
+import GetUserNumberTel from './GetUserNumberTel';
+import SearchModeBtn from './SearchModeBtn';
+import ExportToXlsx from './ExportToXlsx';
 
 const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
 
@@ -41,7 +43,9 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
            
     });
     const [isLoading, setIsLoading] = useState(false);
+    const [isLoading1, setIsLoading1] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [showInput, setShowInput] = useState(true);
     const [reportDetails, setReportDetails] = useState({
         date: "",
         adultMale: 0,
@@ -52,6 +56,8 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
         total: 0,
     });
     const [missedCount, setMissedCount] = useState("");
+    const [membersName, setMembersName] = useState([]);
+    const [memberName, setMemberName] = useState("");
     const [reportDetails1, setReportDetails1] = useState("");
     const [reportDetails2, setReportDetails2] = useState("");
     const [alertData, setAlertData] = useState({
@@ -73,8 +79,9 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
     }; 
 
     const escapedSearchInput = escapeRegExp(formInput.town);
+    const escapedSearchInput1 = escapeRegExp(memberName);
     let filteredTown;
-
+    let filteredData;
     if(formInput.town.length > 0){
 
         filteredTown= town.length > 0 && town.filter((name)=> {
@@ -87,13 +94,29 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
 
       });
     };
+    if(memberName.length > 0){
+  
+            filteredData = membersName.length > 0 && membersName.filter((name) => {
+
+                if (!name) return null;
+
+                const escapedInput = escapedSearchInput1.trim().toLowerCase();
+
+                // Split the name into words (e.g., ['Ose', 'Mudi'])
+                const nameParts = name.toLowerCase().split(' ');
+
+                // Check if any part of the name starts with the input
+                return nameParts.some(part => part.startsWith(escapedInput));
+            });
+
+  };
 
     const fetchCheckIns  = async() =>{
 
         try {
             setIsLoading(true);
             const indexedDBResponse = await getDataFromDB("attendance", "a");
-  
+         
             if(indexedDBResponse){
               
                 const members = indexedDBResponse.data.map(([id, user]) => ({ id, ...user }));
@@ -118,12 +141,17 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
                         const towns = membersInstance.map((member) => {
                             return member.town.toLowerCase();
                         });
+
+                        const names = membersInstance.map((member) => {
+                            return member.name;
+                        });
             
                         const uniqueTowns = [...new Set(towns)];
                         setShowCheckIns(true);
                         setCheckIns(membersInstance); 
                         setHoldCheckIns(membersInstance);
                         setTown(uniqueTowns);
+                        setMembersName(names);
                         setIsLoading(false);
                 }else{
                    
@@ -135,6 +163,7 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
                         fgCol: '#fff', 
                         btnName: 'Close'});
                 };
+                 
                 
             }else {
 
@@ -147,6 +176,7 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
                     btnName: 'Close'});
                 setTableMess("No data found!")
             };
+             setShowInput(true);
      
         } catch (error) {
                 console.error("Error fetching checkIns", error);
@@ -162,6 +192,26 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
             setIsLoading(false);
         }
     };
+
+     const handleChoice =(item)=> {
+       
+        const filteredCheckedInByName = checkIns.find((member)=> {
+            if(member.name === item){
+                return member;
+            };
+        });
+
+        if (filteredCheckedInByName){
+          setCheckIns([filteredCheckedInByName]);
+          setMemberName("");
+           setShowInput(false);
+        };
+    };
+
+    const handleExitSearchMode = ()=>{
+        fetchCheckIns();
+    };
+
     const handleShowTownInput= () =>{
             setShowTownInput(true);
     };
@@ -214,6 +264,7 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
             const adultMale = countMatchingPairs({array: checkIns, key1: "category", value1: "Adult", key2: "gender", value2: "male"});
             const adultFemale = countMatchingPairs({array: checkIns, key1: "category", value1: "Adult", key2: "gender", value2: "female"});
             const teenagers = countValueOccurrences({array: checkIns, keyName: "category", value: "Teen"});
+            const vol = countValueOccurrences({array: checkIns, keyName: "status", value: "Vol"});
             const children = countValueOccurrences({array: checkIns, keyName: "category", value: "Child"}) + countValueOccurrences({array: checkIns, keyName: "category", value: "Baby"});
             const workers = countValueOccurrences({array: checkIns, keyName: "status", value: "Pastor"}) + countValueOccurrences({array: checkIns, keyName: "status", value: "DCN"}) + countValueOccurrences({array: checkIns, keyName: "status", value: "Leader"}) + countValueOccurrences({array: checkIns, keyName: "status", value: "Worker"}); 
             const firstTimers = countValueOccurrences({array: checkIns, keyName: "status", value: "First Timer"});
@@ -228,6 +279,7 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
                 children: children,
                 workers: workers,
                 firstTimers: firstTimers,
+                vol: vol,
                 total: total,
             });
     };
@@ -239,15 +291,17 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
     };
     const handleTrackExternal = async () => {
         try {
+            setIsLoading1(true);
             const firstTimers = await ayzeroxa_backend.trackReturningFirstTimers(dateInput);
-   
             setShowReport({
                 firstTimerReport: true,
             });
             setReportDetails1(firstTimers);
+            setIsLoading1(false);
 
         } catch (e) {
             console.error("Error fetching first timers", e);
+            setIsLoading1(false);
         };
     };
     const handleExitReport = () =>{
@@ -286,8 +340,7 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
              
                 const info = `NOA: ${totalAttendance}
                 Last Attended: ${formattedDate}
-                Missed: ${missedCount}
-                Total Meetings: ${allMeetingDates.length}`;
+                Missed: ${missedCount}`;
                 setAlertData({
                     messageIsOpen: true,
                     message:info,
@@ -313,6 +366,17 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
        
       };
     const handleMissedDays = async() => {
+            if(parseInt(missedCount) < 1){
+                setAlertData({
+                    messageIsOpen: true,
+                    message: "Must be greater than 0",
+                    indicator: "red",
+                    bgCol: 'rgba(0, 0, 0, 0.8)',
+                    fgCol: '#fff',
+                    btnName: 'OK'
+                });
+                return;
+            };
             if (isNaN(parseInt(missedCount))) {
                 
             setAlertData({
@@ -329,10 +393,13 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
             try {
                 setIsLoading(true);
                 const missedDays = await ayzeroxa_backend.getMissedSinceLast(missedCount, dateInput);
-                 const formatted = missedDays.map(([name, missed, lastSeen]) => ({
+               
+                if(missedDays.length > 0){
+                 const formatted = missedDays.map(([name, missed, lastSeen, category]) => ({
                         name,
                         missed: Number(missed),
                         lastSeen,
+                        category, 
                 }));
 
                 setReportDetails2(formatted);
@@ -340,7 +407,19 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
                 setShowReport({
                     missedDaysReport: true,
                 });
-                
+
+            }else{
+                setAlertData({
+                    messageIsOpen: true,
+                    message: "No missed days found",
+                    indicator: "red",
+                    bgCol: 'rgba(0, 0, 0, 0.8)',
+                    fgCol: '#fff',
+                    btnName: 'OK'
+                });
+                setIsLoading(false);
+            };
+
             } catch (error) {
                 console.error("Error fetching missed days", error);
                  setAlertData({
@@ -354,48 +433,28 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
                 setIsLoading(false);
             };
     };
-    const getUserNumberTel = async (name) => {
-        try {
-            const indexedDBResponse = await getDataFromDB("members", "m");
-            if(indexedDBResponse){
-                          
-                const members = await BlobToArray({encryptedData: indexedDBResponse.data});
-                const names = members.map((member) => {
-                    return {name: `${member.firstName} ${member.surName}`, tel: member.tel};
-                });
+    const showSearchModeIcon =  !showSearchIcon || !showInput;
 
-                const getTel = names.find((item) => item.name.toLowerCase() === name.toLowerCase());
-                if(getTel && getTel.tel){
-
-                      setAlertData({
-                        messageIsOpen: true,
-                        message: `Phone Number: ${getTel.tel}`,
-                        indicator: "#0077b6",
-                        bgCol: 'rgba(0, 0, 0, 0.8)',
-                        fgCol: '#fff',
-                        btnName: 'OK'
-                    });
-                }else{
-                    setAlertData({
-                        messageIsOpen: true,
-                        message: "No phone number found for this member.",
-                        indicator: "red",
-                        bgCol: 'rgba(0, 0, 0, 0.8)',
-                        fgCol: '#fff',
-                        btnName: 'OK'
-                    });
-                };
-            };
-        } catch (error) {
-            console.error("Error fetching user's tel", error);
-        }
-    };
+ 
   return (
     <div className="filter-table">
-          
+          {isLoading1 && <DivSpinner mess="Computing..."/>}
            {(checkIns.length > 0 && showCheckIns) &&
            <div className="filters">
                         <div className="count"><FiUsers/> {checkIns.length}</div>
+                        <div className="checkin-search-name">
+                            {showInput && <Inputs type="text" ph="Enter Name"  value={memberName}  onchange={(e)=>setMemberName(e.target.value)} fs="0.5rem" autoComp="off" wt="100%"/>}
+                            {!showInput && <div><FiArrowLeft cursor="pointer" onClick={handleExitSearchMode}/></div>}
+                            {filteredData && filteredData.length > 0 ? 
+                                <div className='display-items display-items2'>
+                                        {filteredData.length > 0 && filteredData.map((item, index)=>
+                                            (<ul key={index}>
+                                                <li onClick={()=>handleChoice(item)}> <FaUserAlt color='aqua'/> {item} </li> 
+                                            </ul>))}
+                                </div> 
+                                : 
+                                null} 
+                        </div>
                         <ul>
                             <li>
                                 <SelectInput 
@@ -421,8 +480,8 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
                                     value={formInput?.status}
                                     onChange={handleFormInputChange}
                                     name="status"
-                                    ph="Status"
-                                    options={["Pastor", "DCN", "Leader", "Worker", "Member", "First Timer", "Visitor"]}
+                                    ph="Role"
+                                    options={["Pastor", "DCN", "Leader", "Worker", "Member", "Vol", "First Timer", "Visitor"]}
                                 />
                             </li>
                            
@@ -440,7 +499,7 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
                                             null} 
                             </li>
                             <li>
-                                {showSearchIcon && <FiSearch cursor="pointer" onClick={handleSearch}/>}
+                                {showSearchIcon && <FiSearch cursor="pointer" onClick={handleSearch} color='white'/>}
                                 {!showSearchIcon  && <FaTimes cursor="pointer" onClick={handleExitSearch}/>}
                             </li>
                         </ul>
@@ -448,9 +507,14 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
                         <Tooltip position='right' text="Track FirstTimers"><div><FiExternalLink color='aqua' cursor="pointer" onClick={handleTrackExternal}/></div></Tooltip>
                         <div className="missed-days">
                             <Inputs type="number" ph="Missed days"  value={missedCount}  onchange={(e)=>setMissedCount(e.target.value)} fs="0.5rem" autoComp="off" wt="100%"/>
-                            <FiSearch cursor="pointer" onClick={handleMissedDays}/>
+                            <FiSearch cursor="pointer" onClick={handleMissedDays} color='white'/>
                         </div>
             </div>}
+          
+             <div className="export-search">
+                {(checkIns.length > 0) && <ExportToXlsx jsonData={checkIns} fileName="Attendees" bookName="Check-Ins" pd="0.5rem 0"/>}
+                {(checkIns.length > 0 && showSearchModeIcon) && <SearchModeBtn pd="0.5rem 0"/>}
+            </div>
            {(checkIns.length > 0 && showCheckIns) &&
            <div className="table-wrap">
                            {isLoading && <DivSpinner mess="Fetching..."/>}
@@ -467,7 +531,6 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
                                         <th><FiTrash color='aqua'/>Action</th>
                                     </tr>
                                 </thead>
-                            
                                 <tbody>
                                 
                                             {checkIns.map((checkIn)=>{
@@ -476,12 +539,12 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
                                                 const formattedDate = DateSlash({isoDate: date});
                                             
                                                 return ( <tr key={checkIn.id}>
-                                                            <td>{checkIn.name}</td>
-                                                            <td>{checkIn.gender}</td>
-                                                            <td>{checkIn.status}</td>
-                                                            <td>{checkIn.town}</td>
-                                                            <td>{checkIn.category}</td>
-                                                            <td>{checkIn.town}</td>
+                                                            <td>{checkIn.name.toUpperCase()}</td>
+                                                            <td>{checkIn.gender.toUpperCase()}</td>
+                                                            <td>{checkIn.status.toUpperCase()}</td>
+                                                            <td>{checkIn.town.toUpperCase()}</td>
+                                                            <td>{checkIn.category.toUpperCase()}</td>
+                                                            <td>{checkIn.channel || "NU"}</td>
                                                             <td>{formattedDate}</td>
                                                             <td style={{display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem"}}>
                                                                 
@@ -490,13 +553,12 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
                                                             
                                                             </td>
                                                     </tr>)
-                                            
                                         })}
                                 </tbody>
                             </table>
             </div>}
            
-            {((checkIns.length === 0 && !showCheckIns )|| showCheckIn) && 
+            {(!showCheckIns) && 
             <div className="date-wrap">
                 <p>Meeting Date:</p>
                 <Inputs type="date" value={dateInput} onchange={(e)=>setDateInput(e.target.value)} wt="100%" col="#1b2328" bd="none"/>
@@ -517,7 +579,9 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
                     copied={copied}
                     setCopied={setCopied}
                     report={reportDetails1}
+                    setReport = {setReportDetails1}
                     showMemberAttendanceInfo={showMemberAttendanceInfo}
+                  
                 />
             }
 
@@ -527,8 +591,9 @@ const CheckIns = ({handleDelete, checkIns, setCheckIns, showCheckIn}) => {
                     copied={copied}
                     setCopied={setCopied}
                     report={reportDetails2}
+                    setReport = {setReportDetails2}
                     showMemberAttendanceInfo={showMemberAttendanceInfo}
-                    getUserNumberTel={getUserNumberTel}
+               
                 />
             }
 

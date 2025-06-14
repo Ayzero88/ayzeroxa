@@ -2,6 +2,7 @@ import { ayzeroxa_backend } from "../../../../declarations/ayzeroxa_backend";
 const BlobToArray = async ({ encryptedData }) => {
   try {
     const decryptedBlob = await ayzeroxa_backend.decrypt(encryptedData);  
+   
     let cleanedResponse = decryptedBlob.trim();
     
      // Step 3: Convert Motoko syntax to JSON

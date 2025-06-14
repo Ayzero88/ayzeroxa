@@ -14,7 +14,7 @@ const Alert = ({ message, onClose, indicator, bgCol, fgCol, btnName }) => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 2000, // Adjust the z-index as needed
+    zIndex: 6000, // Adjust the z-index as needed
   };
 
   const contentStyles = {

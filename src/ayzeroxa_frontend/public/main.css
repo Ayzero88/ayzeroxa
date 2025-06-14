@@ -96,7 +96,7 @@ body {
     position: relative;
     width: 20%;
     height: 1rem;
-    background: #0a0a0a; /* Dark background */
+    background: transparent; /* Dark background */
     overflow: hidden;
   }
   
@@ -125,12 +125,14 @@ body {
     justify-content: space-between;
     padding: 0.5rem;
     border-bottom: 1px solid gray;
+   
   }
 
   .footer{
     display: flex;
     align-items: center;
     gap: 0.2rem;
+    margin-top: 4rem;
   }
 
   .footer p {
@@ -347,35 +349,34 @@ button:hover {
 }
 
 /* Enrollment */
-
-
-.enroll {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  justify-content: center;
-  align-items: center;
-  width: 40%;
-  box-shadow: 0px 0.5px 0px #ccc, 
-  0px -0.5px 0px #ccc, 
-  -0.5px 0px 0px #ccc, 
-  0.5px 0px 0px #ccc; 
-  border-radius: 5px;
-  padding: 0.5rem;
-
-}
-
 .enroll-wrap{
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   justify-content: center;
   align-items: center;
-  height: 100vh;
   width: 100%;
+  height: 100vh;
+  overflow-y: auto;
   z-index: 3000;
 }
 
+.enroll {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 60%;
+  box-shadow: 0px 0.5px 0px #ccc, 
+  0px -0.5px 0px #ccc, 
+  -0.5px 0px 0px #ccc, 
+  0.5px 0px 0px #ccc; 
+  border-radius: 5px;
+  padding: 0.5rem; 
+  height: 33rem;
+  overflow-y: auto;
+
+}
 .enroll-title {
   display: flex;
   gap: 0.5rem;
@@ -389,9 +390,17 @@ button:hover {
     justify-content: center;
     gap: 0.5rem;
     width: 100%;
+    padding: 0.5rem;
     
 }
+.form-inputs{
 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 70%;
+}
 input {
   outline: none;
   padding: 0.5rem 1rem;
@@ -410,6 +419,15 @@ input:focus {
 
 }
 
+.date-container{
+  display: flex;
+  background: rgb(70, 69, 69); 
+  align-items: center; 
+  justify-content: center; 
+  border-radius: 5px;
+  width: 100%;
+}
+
 .gender,
 .birth-date,
 .cat-stat-units{
@@ -421,6 +439,9 @@ input:focus {
   margin: 0.5rem 0;
 }
 
+.gender {
+  margin: 1rem 0;
+}
 .cat-stat-unit {
   display: flex;
   gap: 1rem;
@@ -468,8 +489,7 @@ select {
   width: 100%;
   height: 100vh;
   padding: 1rem;
-
-
+  z-index: 7000;
 }
 
 .page-title {
@@ -611,15 +631,13 @@ table td {
 
 }
 
-
-
 .display-items {
   position: absolute;
   top: 2rem;
   left: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.2rem;
   padding: 0.5rem;
   background-color: rgba(0, 0, 0, 0.8);
   color: white;
@@ -630,6 +648,8 @@ table td {
   0.5px 0px 0px #ccc; 
   border-radius: 5px;
   z-index: 1000;
+  display: flex;
+  justify-content: center;
 
 }
 
@@ -658,8 +678,8 @@ table td {
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  height: 7rem;
-   overflow-y: auto;
+  height: 9rem;
+  overflow-y: auto;
 }
 
 .member{
@@ -741,6 +761,13 @@ table td {
   padding: 0.5rem;
 }
 
+.exit-copy-report .filter-select{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .attendance-report-header {
   display: flex;
   justify-content: center;
@@ -769,6 +796,7 @@ table td {
 
   display: flex;
   flex-direction: column;
+  padding: 1rem;
   gap: 1rem;
   width: 100%;
   height: 20rem;
@@ -790,13 +818,19 @@ table td {
   width: 100%;
 }
 
+.enroll-logo {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+}
+
 .date-wrap{
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
   width: 50%;
-  background-color: rgb(54, 53, 53);
+  background-color: rgb(43, 42, 42);
   border-radius: 5px;
   padding: 0.5rem;
 }
@@ -809,7 +843,7 @@ table td {
   width: 100%; /* Takes full width of parent */
   height: 100%; /* Adjust height as needed */
   background-color: rgba(0, 0, 0, 0.8); 
-  z-index: 4000;
+  z-index: 5000;
 }
 
 .spinner-content  {
@@ -984,7 +1018,7 @@ table td {
     font-style: normal;
     width: 30rem;
     height: 20rem;
-  
+    z-index: 5000;
    
 }
 
@@ -1089,7 +1123,8 @@ table td {
 
 }
 
-.missed-days{
+.missed-days,
+.checkin-search-name{
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1103,8 +1138,148 @@ table td {
   width: 12rem;
 }
 
+.checkin-search-name {
+  position: relative;
+}
+
+.first-timers-wrap{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.tongues-visit-date{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.first-timer-when{
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.first-timer-when p {
+  color: gray;
+  font-size: 0.9rem;
+}
+
+.member-info-wrap{
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  width: 100%;
+}
+.member-info-print-area{
+  display: flex; 
+  flex-direction: column; 
+  justify-content: flex-start; 
+  padding: 1rem;  
+  width: 40rem; 
+  box-shadow: 0px 0.5px 0px #ccc, 
+    0px -0.5px 0px #ccc, 
+    -0.5px 0px 0px #ccc, 
+    0.5px 0px 0px #ccc;
+  border-radius: 5px; 
+  height: 30rem;
+}
+.print-logo-wrap, .print-logo{
+  display: flex; 
+  justify-content: flex-start; 
+  align-items: center;
+}
+
+.print-title{
+  display: flex; 
+  justify-content: flex-start; 
+  align-items: center;
+  flex-direction: column;
+}
+.print-town{
+  font-size: 0.5rem; 
+  padding-right: 2.5rem;
+}
+
+.print-info-wrap {
+  display: flex;
+  margin-top: 1rem;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.print-info-title{
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
+}
+.print-info{
+  display: flex;
+  margin-top: 1rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 20rem;
+  overflow-y: auto;
+}
+.print-info-details{
+  display: flex;
+  gap: 1rem;
+}
+
+.print-info-details p:nth-child(2) {
+    font-style: italic;
+}
+
+.subject {
+  font-weight: bold;
+}
+
+.export-search{
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 0.5rem;
+      
+    }
+
+.search-mode div,
+.export-mode div {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0px 0.5px 0px aqua, 
+      0px -0.5px 0px aqua, 
+      -0.5px 0px 0px aqua, 
+      0.5px 0px 0px aqua;
+      border-radius: 5px;
+      padding: 0.2rem;
+      width: 8rem;
+      cursor: pointer;
+  
+    }
+
+    .export-mode div {
+       background-color: green;
+       gap: 0.3rem;
+     
+    }
+
+
+    .adv-date{
+      background-color: rgb(80, 79, 79);
+      border-radius: 5px;
+    }
+
 @media(max-width: 1025px){
 
+    .header {
+      flex-direction: column;
+      gap: 0.5rem;
+     
+    }
     .alert-mess{
         width: 20rem!important;
         height: 15rem!important;
@@ -1149,11 +1324,7 @@ table td {
       font-size: 0.5rem;
     }
 
-    .enroll {
-      width: 90%;
-
-    }
-
+  
     .table-wrap {
       display: flex;
       width: 100%;
@@ -1175,18 +1346,10 @@ table td {
     .update-wrap{
       z-index: 1000;
     }
-
-    .enroll-wrap {
-       height: 40rem; 
-    }
-
     .exit-btn {
       z-index: 3000;
     }
-    .birth-date, .cat-stat-unit, .cat-stat-units {
-      gap: 0.1rem!important;
-      margin: 0.4rem 0rem!important;
-    }
+   
 
     .adj-dis{
       width: 20rem!important;
@@ -1213,14 +1376,31 @@ table td {
       overflow-x: auto;
     }
 
+    .display-items{
+      width: 18rem !important;
+    }
+    .display-items2{
+      width: 12rem!important;
+    }
 
+     .display-items3{
+
+      display: flex!important;
+      width: 180%!important;
+    }
+
+    .display-items ul {
+      width: 100%;
+    }
     .filter ul li {
       gap: 0.3rem;
     }
-    .advance{
-      width: 100%;
-    }
+  
+    .cat-stat-unit{
+      flex-direction: row!important;
+      width: 80%!important;
 
+    }
     .advance .inputs {
       width: 30%!important;
       font-family: 0.5rem!important;
@@ -1245,7 +1425,6 @@ table td {
       width: 100%;
       
     }
-
     .home-btn2{
       display: flex;
       border: 1px solid #ccc;
@@ -1271,8 +1450,63 @@ table td {
       width: 8rem;
     }
 
+     .enroll-wrap {
+      height: 100rem;
+    }
+
+    .enroll{
+      width: 80%;
+    }
+
+    .search-mode, .export-mode{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%
+    }
+
+    .export-search{
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.2rem;
+    }
+   
     .footer {
       justify-content: center;
+      margin-top: 5rem;
     }
   }
+@media(max-width: 500px){
+    .enroll-wrap {
+      height: 80rem;
+    }
+    .enroll {
+      width: 90%;
+      height: 50rem;
+
+    }
+
+    .form{
+      gap: 1rem;
+      height: 100rem;
+      overflow: auto;
+    }
+
+    .form-select{
+      display: flex;
+      gap: 2rem;
+    }
+   .birth-date, .cat-stat-unit, .cat-stat-units, .gender {
+      flex-direction: column;
+      gap: 0.3rem!important;
+      margin: 0.4rem 0rem!important;
+    }
+
+     .tongues-visit-date{
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+   
+}
 

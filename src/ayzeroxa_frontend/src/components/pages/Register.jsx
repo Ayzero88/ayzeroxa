@@ -1,10 +1,9 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Header from '../utils/Header';
 import Footer from '../utils/Footer';
 import { v4 as uuidv4 } from 'uuid';
 import RegForm from '../utils/RegForm';
 import { FaStar } from 'react-icons/fa';
-import SyncDB from '../utils/SyncDB';
 import { ayzeroxa_backend } from '../../../../declarations/ayzeroxa_backend';
 import Alert from '../utils/Alert';
 
@@ -14,6 +13,20 @@ const Register = () => {
     firstName: "",
     surName: "",
     gender: "",
+    email: "",
+    employed: "",
+    marital: "",
+    age: "",
+    bornAgain: "",
+    visitYou: "",
+    visitWhen: "",
+    likeAbout: "",
+    doBetter: "",
+    prayer: "",
+    tongues: "",
+    cell: "",
+    nok: "",
+    nokt: "",
     dob: "",
     mob: "",
     channel: "",
@@ -27,7 +40,7 @@ const Register = () => {
   });
   const [selectedItems, setSelectedItems] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-   const [alertData, setAlertData] = useState({
+  const [alertData, setAlertData] = useState({
     messageIsOpen: false, 
     message: '', 
     indicator: '',
@@ -48,6 +61,20 @@ const Register = () => {
       firstName: "",
       surName: "",
       gender: "",
+      email: "",
+      employed: "",
+      marital: "",
+      age: "",
+      bornAgain: "",
+      visitYou: "",
+      visitWhen: "",
+      likeAbout: "",
+      doBetter: "",
+      prayer: "",
+      tongues: "",
+      cell: "",
+      nok: "",
+      nokt: "",
       dob: "",
       mob: "",
       channel: "",
@@ -62,7 +89,7 @@ const Register = () => {
   };
 
   const handleCreate = async() => {
-       if(!formInput.firstName || !formInput.surName || !formInput.gender ||  !formInput.tel || !formInput.address || !formInput.status || !formInput.category || selectedItems.length === 0){
+       if(!formInput.firstName || !formInput.surName || !formInput.gender ||  !formInput.tel || !formInput.town || !formInput.status || !formInput.category){
            setAlertData({
               messageIsOpen: true, 
               message: 'All fields are required', 
@@ -95,7 +122,7 @@ const Register = () => {
                     bgCol: 'rgba(0, 0, 0, 0.8)', 
                     fgCol: '#fff', 
                     btnName: 'Close'});
-              await SyncDB();
+             
               handleClearInputs();
               setIsLoading(false);
             }else{
@@ -125,6 +152,7 @@ const Register = () => {
         };
   };
 
+
   return (
     <div>
         <Header />
@@ -133,6 +161,7 @@ const Register = () => {
             btnText="Create" 
             btnIcon={<FaStar/>} 
             formInput={formInput}
+            setFormInput={setFormInput}
             selectedItems={selectedItems}
             setSelectedItems={setSelectedItems} 
             handleFormInputChange={handleFormInputChange} 

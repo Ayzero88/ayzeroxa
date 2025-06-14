@@ -49,6 +49,10 @@ const divToCopy = useRef(null);
                 </div>
                 <hr/>
                 <div>
+                    <p>Volunteers:</p>
+                    <p>{report.vol}</p>
+                </div>
+                <div>
                     <p>Workers:</p>
                     <p>{report.workers}</p>
                 </div>

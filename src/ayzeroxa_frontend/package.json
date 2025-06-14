@@ -27,7 +27,8 @@
     "react-scripts": "5.0.1",
     "stream-browserify": "^3.0.0",
     "util": "^0.12.5",
-    "uuid": "8.3.2"
+    "uuid": "8.3.2",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",

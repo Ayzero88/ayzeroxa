@@ -1,8 +1,8 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Header from '../utils/Header';
 import MovingLine from '../utils/MovingLine';
 import { FaArrowDown, FaArrowUp, FaHome, FaMousePointer, FaRegAddressBook, FaTimes, FaUserAlt, FaWindowClose } from 'react-icons/fa';
-import { FiActivity, FiCalendar, FiCircle, FiFeather, FiFilter, FiHome, FiMapPin, FiPenTool, FiPhone, FiSearch, FiSettings, FiToggleLeft, FiToggleRight, FiTrash, FiUser, FiUsers} from 'react-icons/fi';
+import { FiActivity, FiCalendar, FiCircle, FiEye, FiFeather, FiFilter, FiHome, FiMapPin, FiPenTool, FiPhone, FiSearch, FiSettings, FiToggleLeft, FiToggleRight, FiTrash, FiUser, FiUsers} from 'react-icons/fi';
 import Buttons from '../utils/Buttons';
 import RegForm from '../utils/RegForm';
 import Inputs from '../utils/Inputs';
@@ -11,21 +11,28 @@ import SelectInput from '../utils/SelectInput';
 import { MdCake, MdSensorWindow } from 'react-icons/md';
 import SelectInputWithLabel from '../utils/SelectInputWithLabel';
 import Footer from '../utils/Footer';
-import { getDataFromDB } from '../data/IndexedDB';
-import BlobToArray from '../crpt/BlobToArray';
+import { getDataFromDB, updateDB } from '../data/IndexedDB';
 import SyncDB from '../utils/SyncDB';
 import DivSpinner from '../utils/DivSpinner';
 import Tooltip from '../utils/Tooltip';
 import { ayzeroxa_backend } from '../../../../declarations/ayzeroxa_backend';
 import Alert from '../utils/Alert';
+import MemberInfo from '../utils/MemberInfo';
+import { useUser } from '../context/UserContext';
+import SearchModeBtn from '../utils/SearchModeBtn';
+import ExportToXlsx from '../utils/ExportToXlsx';
 
 
 const View = () => {
     const [registry, setRegistry] = useState([]);
-    const [holderUsers, setHoldUsers] = useState([]);
+    const [holdMembers, setHoldMembers] = useState([]);
+    const [memberInfo, setMemberInfo] = useState([]);
     const [sortedRegistry, setSortedRegistry] = useState([]);
     const [tableMess, setTableMess] = useState("Click Fetch...");
-    const [edit, setEdit] = useState(false);
+    const [display, setDisplay] = useState({
+        edit: false,
+        view: false
+    });
     const [isSorted, setIsSorted] = useState(false);
     const [id, setId] = useState('');
     const [formInput, setFormInput] = useState({
@@ -33,6 +40,20 @@ const View = () => {
         firstName: "",
         surName: "",
         gender: "",
+        email: "",
+        employed: "",
+        marital: "",
+        age: "",
+        bornAgain: "",
+        visitYou: "",
+        visitWhen: "",
+        likeAbout: "",
+        doBetter: "",
+        prayer: "",
+        tongues: "",
+        cell: "",
+        nok: "",
+        nokt: "",
         dob: "",
         mob: "",
         channel: "",
@@ -62,6 +83,7 @@ const View = () => {
             status: "",
             category: "",
             unit: "",
+            dateInput: "",
     });
     const [dateInput, setDateInput] = useState({
         day: "",
@@ -89,6 +111,7 @@ const View = () => {
         bgCol: '',
         fgCol: '',
         btnName: '',});
+    const {userRole, setUserRole } = useUser();
 
     const handleFormInputChange = (e) => {
         const {name, value} = e.target;
@@ -132,13 +155,11 @@ const View = () => {
     const fetchRegistry = async()=>{
         try {
             setIsLoading(true);
-            const indexedDBResponse = await getDataFromDB("members", "m");
-       
-            if(indexedDBResponse){
-              
-                    const members = await BlobToArray({encryptedData: indexedDBResponse.data});
-                    
-
+            await SyncDB();
+           
+            const getMembers = await getDataFromDB("members", "m");
+            if(getMembers){
+                    const members = getMembers.data;
                     const names = members.map((member) => {
                         return `${member.firstName} ${member.surName}`;
                     });
@@ -150,20 +171,43 @@ const View = () => {
                     const uniqueTowns = [...new Set(towns)];
         
                     setRegistry(members); 
-                    setHoldUsers(members);
+                    setHoldMembers(members);
                     setMemberName(names)
                     setTown(uniqueTowns);
                     setIsLoading(false);
             }else {
 
-                 setAlertData({
-                    messageIsOpen: true, 
-                    message: 'No data found! initialize data store', 
-                    indicator: "#0077b6", 
-                    bgCol: 'rgba(0, 0, 0, 0.8)', 
-                    fgCol: '#fff', 
-                    btnName: 'Close'});
-                setTableMess("No data found!")
+                const getMembers = await ayzeroxa_backend.getAllUsers();
+                if(getMembers){
+                     const members = getMembers.map(([id, user]) => ({ id, ...user }));
+                     const names = members.map((member) => {
+                        return `${member.firstName} ${member.surName}`;
+                    });
+        
+                    const towns = members.map((member) => {
+                        return member.town.toLowerCase();
+                    });
+        
+                    const uniqueTowns = [...new Set(towns)];
+
+                    setRegistry(members); 
+                    setHoldMembers(members);
+                    setMemberName(names)
+                    setTown(uniqueTowns);
+
+                    await updateDB("members", members, "m");
+                    setIsLoading(false);
+
+                }else{
+                    setAlertData({
+                        messageIsOpen: true, 
+                        message: 'No data found!', 
+                        indicator: "#0077b6", 
+                        bgCol: 'rgba(0, 0, 0, 0.8)', 
+                        fgCol: '#fff', 
+                        btnName: 'Close'});
+                    setTableMess("No data found!")
+                };
             };
      
         } catch (error) {
@@ -185,7 +229,7 @@ const View = () => {
         const selected = registry.find((reg)=> reg.id === id);
         setFormInput(selected);
         setOldData(selected);
-        setEdit(true);
+        setDisplay({edit: true});
         setId(id);
         setSelectedItems(selected.unit.split(" "));
         setOldSelectedItems(selected.unit.split(" "));
@@ -206,7 +250,7 @@ const View = () => {
             return;
         };
         
-        if(!formInput.firstName || !formInput.surName || !formInput.gender || !formInput.tel || !formInput.address || !formInput.status || !formInput.category || selectedItems.length === 0){
+        if(!formInput.firstName || !formInput.surName || !formInput.gender || !formInput.tel || !formInput.town || !formInput.status || !formInput.category){
 
              setAlertData({
                     messageIsOpen: true, 
@@ -227,6 +271,7 @@ const View = () => {
          };
 
          setIsLoading1(true);
+        
 
          const response = await ayzeroxa_backend.updateUser(formInputUpdate);
        
@@ -254,6 +299,7 @@ const View = () => {
                     bgCol: 'rgba(0, 0, 0, 0.8)', 
                     fgCol: '#fff', 
                     btnName: 'Close'});
+                    setIsLoading1(false);
          };
 
         try {
@@ -267,6 +313,7 @@ const View = () => {
                     bgCol: 'rgba(0, 0, 0, 0.8)', 
                     fgCol: '#fff', 
                     btnName: 'Close'});
+                    setIsLoading1(false);
         }finally{
             setIsLoading1(false);
         };
@@ -360,7 +407,7 @@ const View = () => {
 
     const handleExit = ()=>{
         handleClearInputs();
-        setEdit(false);
+        setDisplay({edit: false, view: false});
     };
 
     const escapeRegExp=(string)=> {
@@ -376,15 +423,18 @@ const View = () => {
     let filteredTown1
 
     if(searchInput.length > 0){
-        filteredData= memberName.length > 0 && memberName.filter((name)=> {
-        
-          if (!name) return null; // Skip if name is falsy
-          
-          const regex = new RegExp(`^${escapedSearchInput.slice(0,3)}`, 'i'); // 'i' flag for case-insensitive matching
-          
-          return regex.test(name);
+       filteredData = memberName.length > 0 && memberName.filter((name) => {
+                if (!name) return null;
 
-      });
+                const escapedInput = escapedSearchInput.trim().toLowerCase();
+
+                // Split the name into words (e.g., ['Ose', 'Mudi'])
+                const nameParts = name.toLowerCase().split(' ');
+
+                // Check if any part of the name starts with the input
+                return nameParts.some(part => part.startsWith(escapedInput));
+                });
+
     };
     if(searchTownInput.length > 0){
         filteredTown= town.length > 0 && town.filter((name)=> {
@@ -476,7 +526,7 @@ const View = () => {
         setSearchMale(prev => !prev);
         setSearchFemale(false);
         if(searchMale) {
-            setRegistry(holderUsers);
+            setRegistry(holdMembers);
             setIsOn({female: false});
             setDisabled(false); 
             return;
@@ -492,7 +542,7 @@ const View = () => {
         setSearchFemale(prev => !prev);
         setSearchMale(false);
         if(searchFemale) {
-            setRegistry(holderUsers);
+            setRegistry(holdMembers);
             setIsOn({male: false});
             setDisabled(false); 
             return;
@@ -554,14 +604,12 @@ const View = () => {
     };
 
     const handleExitCategories = () =>{
-        setRegistry(holderUsers);
+        setRegistry(holdMembers);
         setShowSearchIcon(true);
         setFormInput({...formInput, category: ""});
         setDisabled(false);
         setIsOn({male: false, female: false});
     };
-
-
     const handleSearchStatus = () =>{
         setIsOn({male: true, female: true});
         const getStatus = registry.filter((member)=> member.status === formInput.status);
@@ -572,7 +620,7 @@ const View = () => {
     };
 
     const handleExitStatus = () =>{
-        setRegistry(holderUsers);
+        setRegistry(holdMembers);
         setShowSearchIcon1(true);
         setFormInput({...formInput, status: ""});
         setDisabled(false);
@@ -593,7 +641,7 @@ const View = () => {
     };
 
     const handleExitUnit = () =>{
-        setRegistry(holderUsers);
+        setRegistry(holdMembers);
         setShowSearchIcon2(true);
         setFormInput({...formInput, unit: ""});
         setDisabled(false);
@@ -615,78 +663,90 @@ const View = () => {
     };
     const handleExitTown = ()=>{
         setShowTownInput(false);
-        setRegistry(holderUsers);
+        setRegistry(holdMembers);
         setIsOn({male: false, female: false});
         setDisabled(false);
         setIsSorted(false)
       
     };
 
-    // **Search function**: Runs only when the button is clicked
     const handleAdvSearch = () => {
-        const results = registry.filter((item) =>
-          Object.keys(advInputs).every((key) => {
-            const inputValue = advInputs[key].trim().toLowerCase();
-      
-            if (inputValue === "") return true; // skip empty inputs
-      
-            if (key === "unit") {
-              const units = item.unit.toLowerCase().split(" ");
-              return units.includes(inputValue); // check if unit matches
-            }
-      
-            return item[key]?.toLowerCase() === inputValue; // match other fields
-          })
-        );
-      
-        if (results.length > 0) {
-          handleSearchMess(results);
-          setRegistry(results);
-          setShowSearchIcon3(false);
-        } else {
-      
-           setAlertData({
-                    messageIsOpen: true, 
-                    message: "No search parameter entered.", 
-                    indicator: "red", 
-                    bgCol: 'rgba(0, 0, 0, 0.8)', 
-                    fgCol: '#fff', 
-                    btnName: 'Close'});
-          
-        }
-      };
-      
-  const handleExitAdvSearch = ()=>{
-    setRegistry(holderUsers);
-    setShowSearchIcon3(true);
-    setShowAdvFilters(true);
-    setAdvInputs({
-            town: "",
-            gender: "",
-            status: "",
-            category: "",
-            unit: "",
-    })
-  };
+            const results = registry.filter((item) =>
+                Object.keys(advInputs).every((key) => {
+                const rawInput = advInputs[key].trim();
 
-  const handleCakeSearch = () =>{
-        const getBirthDay = registry.filter((dob)=> {
-                const day = dob.dob;
-                const month = dob.mob;
-                return `${day} ${month}` === `${dateInput.day} ${dateInput.month}` || `${month}` === `${dateInput.month}`;
+                if (rawInput === "") return true;
+
+                if (key === "unit") {
+                    const units = item.unit?.toLowerCase().split(" ");
+                    return units?.includes(rawInput.toLowerCase());
+                };
                 
-        });
-        handleSearchMess(getBirthDay);
-        setRegistry(getBirthDay);
-        setShowSearchIcon4(false);
-        
-  };
+                if (key === "dateInput") {
+                    if (!item.createdAt) return false;
+                    const itemDate = new Date(item.createdAt).toISOString().split("T")[0];
+                    console.log(itemDate, rawInput);
+                    return itemDate === rawInput; // compare in plain YYYY-MM-DD
+                };
 
-  const handleExitCakeSearch = () =>{
-        setRegistry(holderUsers);
-        setShowSearchIcon4(true);
-        setDateInput({day: "", month: ""});
-  };
+                // other fields
+                return item[key]?.toLowerCase() === rawInput.toLowerCase();
+                })
+            );
+
+            if (results.length > 0) {
+                handleSearchMess(results);
+                setRegistry(results);
+                setShowSearchIcon3(false);
+            } else {
+                setAlertData({
+                messageIsOpen: true,
+                message: "No match found for the search criteria.",
+                indicator: "red",
+                bgCol: "rgba(0, 0, 0, 0.8)",
+                fgCol: "#fff",
+                btnName: "Close",
+                });
+            }
+    };
+
+    const handleExitAdvSearch = ()=>{
+        setRegistry(holdMembers);
+        setShowSearchIcon3(true);
+        setShowAdvFilters(true);
+        setAdvInputs({
+                town: "",
+                gender: "",
+                status: "",
+                category: "",
+                unit: "",
+        })
+    };
+
+    const handleCakeSearch = () =>{
+            const getBirthDay = registry.filter((dob)=> {
+                    const day = dob.dob;
+                    const month = dob.mob;
+                    return `${day} ${month}` === `${dateInput.day} ${dateInput.month}` || `${month}` === `${dateInput.month}`;
+                    
+            });
+            handleSearchMess(getBirthDay);
+            setRegistry(getBirthDay);
+            setShowSearchIcon4(false);
+            
+    };
+
+    const handleExitCakeSearch = () =>{
+            setRegistry(holdMembers);
+            setShowSearchIcon4(true);
+            setDateInput({day: "", month: ""});
+    };
+
+    const handleViewMember = (id)=>{
+                const selected = registry.find((reg)=> reg.id === id);
+                setMemberInfo(selected)
+                setDisplay({view: true});
+    };
 
     const fetchColor  = registry.length > 0 ? "lime" : "gray" 
     const findMeColor  = findMe ? "lime" : "gray" 
@@ -716,9 +776,13 @@ const View = () => {
         opacity: disabled ? 0.5 : 1,
         userSelect: disabled ? "none" : "auto",
         cursor: disabled ? "not-allowed" : "pointer",
-      };
-   
+    };
 
+    const showSearchModeIcon = isSorted || isOn.female || isOn.male || disabled || !showSearchIcon4 || !showSearchIcon3;
+   
+   useEffect(()=>{
+        fetchRegistry()
+   }, [])
   return (
     <div>
             <Header/>
@@ -734,7 +798,7 @@ const View = () => {
                      <div className="search-wrap" >
                         <Inputs type="text"  wt="100%" ph="Find me via first name" value={searchInput}  onchange={(e)=>setSearchInput(e.target.value)} fs="1rem" autoComp="off"/> 
                         {filteredData && filteredData.length > 0 ? 
-                          <div className='display-items'>
+                          <div className='display-items display-items3'>
                                   {filteredData.length > 0 && filteredData.map((item, index)=>
                                       (<ul key={index}>
                                           <li onClick={()=>handleChoice(item)}> <FaUserAlt color='aqua'/> {item} </li> 
@@ -766,8 +830,8 @@ const View = () => {
                                     value={formInput?.status}
                                     onChange={handleFormInputChange}
                                     name="status"
-                                    ph="Status"
-                                    options={["Pastor", "DCN", "Leader", "Worker", "Member", "First Timer", "Visitor"]}
+                                    ph="Role"
+                                    options={["Pastor", "DCN", "Leader", "Worker", "Member",  "Vol", "First Timer", "Visitor"]}
                                 />
                             </li>
                             {showSearchIcon1 && ((formInput.status && formInput.status !== "Status") && (<FiSearch cursor="pointer" onClick={handleSearchStatus} style={style}/>))}
@@ -778,7 +842,7 @@ const View = () => {
                                         onChange={handleFormInputChange}
                                         name="unit"
                                         ph="Unit"
-                                        options={["Protocol", "BAC", "TAD", "FUP", "Admin", "Edt", "Ambience", "Children", "Teens", "Vol", "none"]}
+                                        options={["Protocol", "BAC", "TAD", "FUP", "Admin", "Edt", "Sanctuary", "Ambience",  "Children", "Teens", "Vol", "none"]}
                                     />
                             </li>
                             {showSearchIcon2 && ((formInput.unit && formInput.unit !== "Category") && (<FiSearch cursor="pointer" onClick={handleSearchUnit} style={style}/>))}
@@ -827,8 +891,8 @@ const View = () => {
                                             value={advInputs?.status}
                                             onChange={handleAdvInputChange}
                                             name="status"
-                                            ph="Status"
-                                            options={["Pastor", "DCN", "Leader", "Worker", "Member", "First Timer", "Visitor"]}
+                                            ph="Role"
+                                            options={["Pastor", "DCN", "Leader", "Worker", "Member", "Vol", "First Timer", "Visitor"]}
                                         />
                                         <SelectInput 
                                             value={advInputs?.category}
@@ -844,6 +908,8 @@ const View = () => {
                                             ph="Unit"
                                             options={["Protocol", "BAC", "TAD", "FUP", "Admin", "Edt", "Sanctuary", "Ambience", "Children", "Teens", "Vol", "none"]}
                                         />
+
+                                        <div className='adv-date'><Inputs type="date" value={advInputs?.dateInput} name="dateInput" onchange={handleAdvInputChange} wt="100%" col="#1b2328" bd="none"/></div>
 
                                        
                                 </div>
@@ -874,6 +940,12 @@ const View = () => {
                     </div>
                     
                 </div>
+                <div className="export-search">
+                    <ExportToXlsx jsonData={registry} fileName="Members" bookName="Registry" pd="0.5rem 0"/>
+                    {(showSearchModeIcon) && <SearchModeBtn pd="0.5rem 0"/>}
+                </div>
+                
+
                 <div className="table-wrap">
                         {isLoading && <DivSpinner mess="Fetching..."/>}
                         {isLoading2 && <DivSpinner mess="Deleting..."/>}
@@ -882,7 +954,7 @@ const View = () => {
                                 <tr>
                                     <th><FiUser color='aqua'/> SN</th>
                                     <th><FiUser color='aqua'/> FN</th>
-                                    <th><FiHome color='aqua'/> ADDRESS</th>
+                                    <th><FiHome color='aqua'/> ADD</th>
                                     <th><FiMapPin color='aqua'/> TOWN</th>
                                     <th><FiPhone color='aqua'/> TEL</th>
                                     <th><FiUsers color='aqua'/> SEX</th>
@@ -891,7 +963,7 @@ const View = () => {
                                     <th><FiActivity color='aqua'/> CAT</th>
                                     <th><FiFeather color='aqua'/> STAT</th>
                                     <th><FiCircle color='aqua'/> UNIT</th>
-                                    <th><FiSettings color='aqua'/> ACTION</th>
+                                    <th><FiSettings color='aqua'/> ACT</th>
                                 </tr>
                             </thead>
                           
@@ -901,20 +973,21 @@ const View = () => {
                                     (isSorted ? sortedRegistry : registry).map((reg, index) =>(
 
                                         <tr key={reg.id}>
-                                                <td>{reg.surName}</td>
-                                                <td>{reg.firstName}</td>
-                                                <td>{reg.address}</td>
-                                                <td>{reg.town}</td>
+                                                <td>{reg.surName.toUpperCase()}</td>
+                                                <td>{reg.firstName.toUpperCase()}</td>
+                                                <td>{reg.address  || "NU"}</td>
+                                                <td>{reg.town.toUpperCase()}</td>
                                                 <td>{reg.tel}</td>
-                                                <td>{reg.gender}</td>
-                                                <td>{reg.dob}</td>
-                                                <td>{NumToMonth({num: reg.mob})}</td>
-                                                <td>{reg.category}</td>
-                                                <td>{reg.status}</td>
-                                                <td>{reg.unit}</td>
+                                                <td>{reg.gender.toUpperCase()}</td>
+                                                <td>{reg.dob || "NU"}</td>
+                                                <td>{reg.mob ? NumToMonth({num: reg.mob}) : "NU"}</td>
+                                                <td>{reg.category.toUpperCase()}</td>
+                                                <td>{reg.status.toUpperCase()}</td>
+                                                <td>{reg.unit.toUpperCase()  || "NU"}</td>
                                                 <td><div style={{display: "flex", gap: "1rem", justifyContent: "center"}}>
-                                                <Tooltip text="Edit" position='bottom'><FiPenTool color='#ccc' cursor="pointer" onClick = {()=>handleEdit(reg.id)}/></Tooltip>
-                                                <Tooltip text="Delete" position='bottom'><FiTrash color='red' cursor="pointer" onClick = {()=>handleDelete(reg.id)} /></Tooltip>
+                                                <Tooltip text="view" position='left'><FiEye color='#ccc' cursor="pointer" onClick = {()=>handleViewMember(reg.id)}/></Tooltip>
+                                                <Tooltip text="Edit" position='left'><FiPenTool color='#ccc' cursor="pointer" onClick = {()=>handleEdit(reg.id)}/></Tooltip>
+                                                {userRole?.role === "admin" && <Tooltip text="Delete" position='left'><FiTrash color='red' cursor="pointer" onClick = {()=>handleDelete(reg.id)} /></Tooltip>}
                                                     </div></td>
                                         </tr>
 
@@ -923,7 +996,7 @@ const View = () => {
                             </tbody>
                         </table>
                 </div>
-                {edit && 
+                {display.edit && 
                 <div className="update-wrap">
                         <FaTimes color='red' size={20} onClick={handleExit} cursor="pointer"/>
                         <RegForm 
@@ -931,6 +1004,7 @@ const View = () => {
                             btnText="Update" 
                             btnIcon={<FaArrowUp/>} 
                             formInput={formInput} 
+                            setFormInput={setFormInput}
                             selectedItems={selectedItems}
                             setSelectedItems={setSelectedItems} 
                             handleFormInputChange={handleFormInputChange} 
@@ -939,8 +1013,16 @@ const View = () => {
                             type="update"/>
                 
                 </div>}
+
+                {display.view &&
+                    <div className='update-wrap'>
+                        <FaTimes color='red' size={20} onClick={handleExit} cursor="pointer"/>
+                            <MemberInfo memberInfo={memberInfo}/>
+                    </div>                
+                    
+                }
             </div>
-            <div style={{display: "flex", justifyContent: "center", marginBottom: "1rem"}}> <Footer/></div>
+            <div style={{display: "flex", justifyContent: "center", margin: "1rem 0"}}> <Footer/></div>
 
               { alertData.messageIsOpen && (
                     <Alert

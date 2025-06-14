@@ -2,7 +2,6 @@ import React, {useState, useEffect} from 'react';
 import Inputs from '../utils/Inputs';
 import { FiStar, FiToggleLeft, FiToggleRight, FiUser } from 'react-icons/fi';
 import Member from '../utils/Member';
-import BlobToArray from '../crpt/BlobToArray';
 import { getDataFromDB } from '../data/IndexedDB';
 import { v4 as uuidv4 } from 'uuid';
 import CheckIns from '../utils/CheckIns';
@@ -12,6 +11,7 @@ import { ayzeroxa_backend } from '../../../../declarations/ayzeroxa_backend';
 import Alert from '../utils/Alert';
 import DivSpinner from '../utils/DivSpinner';
 import Logo from '../utils/Logo';
+import SyncDB from '../utils/SyncDB';
 
 const AuthEngine = () => {
   const [inputVal, setInputVal] = useState("");
@@ -23,6 +23,8 @@ const AuthEngine = () => {
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [showCheckInSwitch, setShowCheckInSwitch] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoading1, setIsLoading1] = useState(false);
+  const [isLoading2, setIsLoading2] = useState(false);
      const [alertData, setAlertData] = useState({
       messageIsOpen: false, 
       message: '', 
@@ -43,18 +45,24 @@ const AuthEngine = () => {
   const escapedSearchInput = escapeRegExp(inputVal);
   let filteredData;
   if(inputVal.length > 0){
-    filteredData= member.length > 0 && member.filter((name)=> {
-    
-      if (!name) return null; // Skip if name is falsy
-      
-      const regex = new RegExp(`^${escapedSearchInput.slice(0,3)}`, 'i'); // 'i' flag for case-insensitive matching
-      
-      return regex.test(name);
+  
+    filteredData = member.length > 0 && member.filter((name) => {
 
-  });
+          if (!name) return null;
+
+          const escapedInput = escapedSearchInput.trim().toLowerCase();
+
+          // Split the name into words (e.g., ['Ose', 'Mudi'])
+          const nameParts = name.toLowerCase().split(' ');
+
+          // Check if any part of the name starts with the input
+          return nameParts.some(part => part.startsWith(escapedInput));
+    });
+
   };
 
   const handleCheckIn = async() =>{
+
    const attendee = {
       id: userId,
       name: `${membersData.firstName} ${membersData.surName}`,
@@ -66,6 +74,7 @@ const AuthEngine = () => {
       tel: membersData.tel,
       createdAt: new Date().toISOString(),
    };
+
 
     try {
           setIsLoading(true);
@@ -127,27 +136,30 @@ const AuthEngine = () => {
   };
 
   const fetchRegistry = async (isMounted) => {
+    
     try {
+      setIsLoading2(true);
+      await SyncDB();
       const indexedDBResponse = await getDataFromDB("members", "m");
-  
+      
       if (indexedDBResponse) {
-       
-        const members = await BlobToArray({ encryptedData: indexedDBResponse.data });
-  
+         const members = indexedDBResponse.data;
         if (isMounted()) {  // ✅ Only update state if component is still mounted
           const names = members.map((member) => `${member.firstName} ${member.surName}`);
           setRegistry(members);
           setMember(names);
+          setIsLoading2(false);
         }
       } else {
      
          setAlertData({
             messageIsOpen: true, 
-            message: 'No data found! initialize data store', 
+            message: 'No data found!', 
             indicator: "#0077b6", 
             bgCol: 'rgba(0, 0, 0, 0.8)', 
             fgCol: '#fff', 
             btnName: 'Close'});
+            setIsLoading2(false);
       }
     } catch (error) {
       console.error("Error fetching registry", error);
@@ -158,8 +170,10 @@ const AuthEngine = () => {
           bgCol: 'rgba(0, 0, 0, 0.8)', 
           fgCol: '#fff', 
           btnName: 'Close'});
+          setIsLoading2(false);
     }
   };
+
 
   const handleShowCheckIns = ()=>{
       setShowCheckIn(true);  
@@ -175,8 +189,8 @@ const AuthEngine = () => {
     
   };
 
-   const handleDelete = async (timestamp, id) => {
-     setIsLoading(true);
+  const handleDelete = async (timestamp, id) => {
+     setIsLoading1(true);
 
     if (!timestamp || !id) return;
          
@@ -197,7 +211,7 @@ const AuthEngine = () => {
             
           await SyncDB1();
          
-        setIsLoading(false);
+        setIsLoading1(false);
       } else {
 
          setAlertData({
@@ -207,7 +221,7 @@ const AuthEngine = () => {
             bgCol: 'rgba(0, 0, 0, 0.8)', 
             fgCol: '#fff', 
             btnName: 'Close'});
-            setIsLoading(false);
+            setIsLoading1(false);
       }
     } catch (err) {
       console.error("Delete error", err);
@@ -222,7 +236,7 @@ const AuthEngine = () => {
       
     };
 
-    setIsLoading(false);
+    setIsLoading1(false);
   };
 
   useEffect(()=>{
@@ -239,7 +253,9 @@ const AuthEngine = () => {
       
           
             <div className="auth-engine">
-                {isLoading && <DivSpinner mess="Deleting..."/>}
+                {isLoading && <DivSpinner mess="Checking In..."/>}
+                {isLoading1 && <DivSpinner mess="Deleting..."/>}
+                {isLoading2 && <DivSpinner mess="Fetching Member's Data..."/>}
                {!showCheckIn && <Logo wt="4rem"/>}
              {showCheckInSwitch &&  
              <div className="view-check-ins"> 
@@ -257,7 +273,7 @@ const AuthEngine = () => {
                     </div> 
                     : 
                     null} 
-                {!checkedIn && <Member handleCheckIn={handleCheckIn} handleExitCheckIn={handleExitCheckIn} membersData={membersData} isLoading={isLoading} />}
+                {!checkedIn && <Member handleCheckIn={handleCheckIn} handleExitCheckIn={handleExitCheckIn} membersData={membersData}/>}
 
                 {showCheckIn && <CheckIns handleDelete={handleDelete} checkIns={checkIns} setCheckIns={setCheckIns} setShowCheckIn={setShowCheckIn} showCheckIn={showCheckIn}/>}
                 { alertData.messageIsOpen && (
